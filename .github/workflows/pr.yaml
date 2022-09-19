@@ -1,0 +1,120 @@
+name: PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+env:
+  RUSTFLAGS: -D warnings
+  RUSTDOCFLAGS: -D warnings
+
+jobs:
+  update:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cargo cache
+        uses: actions/cache@v2
+        with:
+          key: ${{ github.sha }}
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/git/db
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+            Cargo.lock
+      - name: Update
+        run: cargo update
+
+  check:
+    runs-on: ubuntu-20.04
+    needs: [update]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cargo cache
+        uses: actions/cache@v2
+        with:
+          key: ${{ github.sha }}
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/git/db
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+            Cargo.lock
+      - name: Check cache
+        uses: actions/cache@v2
+        with:
+          key: check-${{ hashFiles('Cargo.lock') }}
+          path: target
+      - name: Check
+        run: cargo check --all-targets
+
+  clippy:
+    runs-on: ubuntu-20.04
+    needs: [check]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cargo cache
+        uses: actions/cache@v2
+        with:
+          key: ${{ github.sha }}
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/git/db
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+            Cargo.lock
+      - name: Check cache
+        uses: actions/cache@v2
+        with:
+          key: check-${{ hashFiles('Cargo.lock') }}
+          path: target
+      - name: Clippy
+        run: cargo clippy --all-targets
+
+  doc-check:
+    runs-on: ubuntu-20.04
+    needs: [check]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cargo cache
+        uses: actions/cache@v2
+        with:
+          key: ${{ github.sha }}
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/git/db
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+            Cargo.lock
+      - name: Check cache
+        uses: actions/cache@v2
+        with:
+          key: check-${{ hashFiles('Cargo.lock') }}
+          path: target
+      - name: Doc check
+        run: cargo doc --no-deps
+
+  test:
+    runs-on: ubuntu-20.04
+    needs: [update]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cargo cache
+        uses: actions/cache@v2
+        with:
+          key: ${{ github.sha }}
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/git/db
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/index
+            Cargo.lock
+      - name: Test cache
+        uses: actions/cache@v2
+        with:
+          key: test-${{ hashFiles('Cargo.lock') }}
+          path: target
+      - name: Test
+        run: cargo test

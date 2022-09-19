@@ -1,0 +1,30 @@
+[package]
+name = "aws_sso_flow"
+version = "0.1.0"
+authors = ["Chris Connelly <chris@connec.co.uk>"]
+license = "MIT"
+edition = "2021"
+description = "AWS SSO authentication flow"
+repository = "https://github.com/connec/aws_sso_flow"
+
+[features]
+default = ["rustls"]
+native-tls = ["rusoto_core/native-tls", "rusoto_sso/native-tls", "rusoto_sso_oidc/native-tls"]
+rustls = ["rusoto_core/rustls", "rusoto_sso/rustls", "rusoto_sso_oidc/rustls"]
+
+[dependencies]
+chrono = { version = "0.4.22", default-features = false }
+const-str = "0.4.3"
+dirs-next = "2.0.0"
+futures = "0.3.24"
+md-5 = "0.10.4"
+rusoto_core = { version = "0.48.0", default-features = false }
+rusoto_sso = { version = "0.48.0", default-features = false }
+rusoto_sso_oidc = { version = "0.48.0", default-features = false }
+serde = { version = "1.0.144", features = ["derive"] }
+serde_json = "1.0.85"
+tokio = { version = "1.21.0", features = ["fs", "io-util", "sync"] }
+url = "2.3.1"
+
+[dev-dependencies]
+tokio = { version = "1.21.0", features = ["macros", "rt-multi-thread"] }

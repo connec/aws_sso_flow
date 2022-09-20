@@ -1,6 +1,6 @@
 [package]
 name = "aws_sso_flow"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Chris Connelly <chris@connec.co.uk>"]
 license = "MIT"
 edition = "2021"

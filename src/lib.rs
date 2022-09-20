@@ -21,6 +21,8 @@ mod credentials;
 mod flow;
 mod profile;
 mod region;
+#[cfg(feature = "rusoto")]
+mod rusoto;
 mod sso;
 mod sso_oidc;
 
@@ -33,6 +35,9 @@ pub use crate::{
     profile::{ProfileSource, SsoProfileError},
     region::Region,
 };
+
+#[cfg(feature = "rusoto")]
+pub use crate::rusoto::ChainProvider;
 
 const _: () = assert!(
     const_str::equal!(env!("CARGO_PKG_VERSION_MAJOR"), "0"),

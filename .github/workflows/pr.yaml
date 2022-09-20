@@ -30,6 +30,10 @@ jobs:
   check:
     runs-on: ubuntu-20.04
     needs: [update]
+    strategy:
+      matrix:
+        tls: [rustls, native]
+        rusoto: [true, false]
     steps:
       - uses: actions/checkout@v2
       - name: Cargo cache
@@ -45,14 +49,21 @@ jobs:
       - name: Check cache
         uses: actions/cache@v2
         with:
-          key: check-${{ hashFiles('Cargo.lock') }}
+          key: check-${{ matrix.tls }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Check
-        run: cargo check --all-targets
+        run: |
+          cargo check --all-targets --no-default-features \
+            --features ${{ matrix.tls == 'rustls' && 'rustls' || 'native-tls' }} \
+            ${{ matrix.rusoto && '--features rusoto' || '' }}
 
   clippy:
     runs-on: ubuntu-20.04
     needs: [check]
+    strategy:
+      matrix:
+        tls: [rustls, native]
+        rusoto: [true, false]
     steps:
       - uses: actions/checkout@v2
       - name: Cargo cache
@@ -68,14 +79,21 @@ jobs:
       - name: Check cache
         uses: actions/cache@v2
         with:
-          key: check-${{ hashFiles('Cargo.lock') }}
+          key: check-${{ matrix.tls }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Clippy
-        run: cargo clippy --all-targets
+        run: |
+          cargo clippy --all-targets --no-default-features \
+            --features ${{ matrix.tls == 'rustls' && 'rustls' || 'native-tls' }} \
+            ${{ matrix.rusoto && '--features rusoto' || '' }}
 
   doc-check:
     runs-on: ubuntu-20.04
     needs: [check]
+    strategy:
+      matrix:
+        tls: [rustls, native]
+        rusoto: [true, false]
     steps:
       - uses: actions/checkout@v2
       - name: Cargo cache
@@ -91,14 +109,21 @@ jobs:
       - name: Check cache
         uses: actions/cache@v2
         with:
-          key: check-${{ hashFiles('Cargo.lock') }}
+          key: check-${{ matrix.tls }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Doc check
-        run: cargo doc --no-deps
+        run: |
+          cargo doc --no-deps --no-default-features \
+            --features ${{ matrix.tls == 'rustls' && 'rustls' || 'native-tls' }} \
+            ${{ matrix.rusoto && '--features rusoto' || '' }}
 
   test:
     runs-on: ubuntu-20.04
     needs: [update]
+    strategy:
+      matrix:
+        tls: [rustls, native]
+        rusoto: [true, false]
     steps:
       - uses: actions/checkout@v2
       - name: Cargo cache
@@ -114,7 +139,18 @@ jobs:
       - name: Test cache
         uses: actions/cache@v2
         with:
-          key: test-${{ hashFiles('Cargo.lock') }}
+          key: test-${{ matrix.tls }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Test
-        run: cargo test
+        run: |
+          cargo test --no-default-features \
+            --features ${{ matrix.tls == 'rustls' && 'rustls' || 'native-tls' }} \
+            ${{ matrix.rusoto && '--features rusoto' || '' }}
+
+  status:
+    runs-on: ubuntu-20.04
+    needs: [clippy, doc-check, test]
+    if: always()
+    steps:
+      - run: exit 1
+        if: needs.clippy.result != 'success' || needs.doc-check.result != 'success' || needs.test.result != 'success'

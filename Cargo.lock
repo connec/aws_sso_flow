@@ -32,12 +32,14 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 name = "aws_sso_flow"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "chrono",
  "const-str",
  "dirs-next",
  "futures",
  "md-5 0.10.4",
  "rusoto_core",
+ "rusoto_credential",
  "rusoto_sso",
  "rusoto_sso_oidc",
  "serde",

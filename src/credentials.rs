@@ -48,14 +48,3 @@ impl From<sso::GetRoleCredentialsResponse> for SessionCredentials {
         }
     }
 }
-
-impl From<SessionCredentials> for rusoto_core::credential::AwsCredentials {
-    fn from(creds: SessionCredentials) -> Self {
-        Self::new(
-            creds.access_key_id,
-            creds.secret_access_key,
-            Some(creds.session_token),
-            Some(creds.expires_at),
-        )
-    }
-}

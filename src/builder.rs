@@ -45,6 +45,7 @@ use crate::{ProfileSource, Region, SsoFlow, VerificationPrompt, CLIENT_NAME};
 /// # Ok(())
 /// # }
 /// ```
+#[derive(Clone)]
 #[allow(clippy::module_name_repetitions)]
 pub struct SsoFlowBuilder<S = ProfileSource, V = Infallible> {
     cache_dir: Option<PathBuf>,

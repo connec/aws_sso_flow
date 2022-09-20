@@ -45,7 +45,7 @@ const AWS_PROFILE_DEFAULT: &str = "default";
 /// # Ok(()) }
 /// ```
 #[allow(clippy::module_name_repetitions)]
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct ProfileSource {
     config_file: Option<PathBuf>,
     profile: Option<String>,

@@ -1,5 +1,7 @@
 //! Cleaned up AWS SSO OIDC API.
 
+use std::fmt;
+
 use chrono::{DateTime, TimeZone, Utc};
 use rusoto_core::{credential::StaticProvider, DispatchSignedRequest, RusotoError};
 use rusoto_sso_oidc::{SsoOidc, SsoOidcClient};
@@ -78,6 +80,12 @@ impl Client {
                 Err(error) => return Err(CreateTokenError::Api(error.to_string())),
             }
         }
+    }
+}
+
+impl fmt::Debug for Client {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Client").finish_non_exhaustive()
     }
 }
 

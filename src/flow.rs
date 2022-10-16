@@ -159,6 +159,18 @@ where
     }
 }
 
+impl<V> fmt::Debug for SsoFlow<V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("SsoFlow")
+            .field("cache", &self.cache)
+            .field("sso_oidc_client", &self.sso_oidc_client)
+            .field("sso_client", &self.sso_client)
+            .field("config", &self.config)
+            .field("verification_prompt", &"_")
+            .finish()
+    }
+}
+
 /// An SSO verification prompt.
 ///
 /// The AWS SSO authentication flow requires users to explicitly grant access by visiting a URL and

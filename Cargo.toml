@@ -7,10 +7,17 @@ edition = "2021"
 description = "AWS SSO authentication flow"
 repository = "https://github.com/connec/aws_sso_flow"
 
+[[example]]
+name = "aws_sdk"
+required-features = ["aws-sdk"]
+
 [features]
 default = ["rustls"]
 native-tls = ["rusoto_core/native-tls", "rusoto_sso/native-tls", "rusoto_sso_oidc/native-tls"]
 rustls = ["rusoto_core/rustls", "rusoto_sso/rustls", "rusoto_sso_oidc/rustls"]
+
+# Include integration with aws-sdk
+aws-sdk = ["dep:aws-types-integration"]
 
 # Include integration with rusoto_credential
 rusoto = ["async-trait", "rusoto_credential"]
@@ -31,12 +38,17 @@ url = "2.3.1"
 
 async-trait = { version = "0.1.57", optional = true }
 # The version constraint is the lowest with a compatible ProvideAwsCredentials trait. There's no
-# upper bound so that the version will adapt to whatever clients are using. There will be breakage
+# upper bound so that the version can adapt to whatever clients are using. There will be breakage if
 # if the trait changes in future, but that hopefully won't happen as often as new versions are
 # released with additional service coverage etc.
 rusoto_credential = { version = ">=0.43.0", optional = true }
 
+# The version constraint is the lowest with a compatible ProvideCredentials trait. There's no upper
+# bound so that the version can adapt to whatever clients are using. There will be breakage if the
+# trait changes in future, but that hopefully won't happen as often as new versions are released
+# with additional service coverage etc.
+aws-types-integration = { package = "aws-types", version = ">=0.31.0", optional = true }
+
 [dev-dependencies]
 aws-config = "0.49.0"
-aws-types = "0.49.0"
 tokio = { version = "1.21.0", features = ["macros", "rt-multi-thread"] }

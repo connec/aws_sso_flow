@@ -15,6 +15,8 @@
 //! # Ok(()) }
 //! ```
 
+#[cfg(feature = "aws-sdk")]
+mod aws_sdk;
 mod builder;
 mod cache;
 mod credentials;

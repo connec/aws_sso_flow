@@ -1,5 +1,7 @@
 //! Cleaned up AWS SSO API.
 
+use std::fmt;
+
 use chrono::{DateTime, TimeZone, Utc};
 use rusoto_core::{credential::StaticProvider, DispatchSignedRequest};
 use rusoto_sso::{Sso, SsoClient};
@@ -30,6 +32,12 @@ impl Client {
             .await
             .map_err(|error| error.to_string())
             .and_then(TryInto::try_into)
+    }
+}
+
+impl fmt::Debug for Client {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Client").finish_non_exhaustive()
     }
 }
 

@@ -1,4 +1,4 @@
-use std::{convert::Infallible, path::PathBuf};
+use std::{convert::Infallible, fmt, path::PathBuf};
 
 use crate::{ProfileSource, Region, SsoFlow, VerificationPrompt, CLIENT_NAME};
 
@@ -68,6 +68,23 @@ impl Default for SsoFlowBuilder<ProfileSource, Infallible> {
             config_source: ProfileSource::default(),
             verification_prompt: None,
         }
+    }
+}
+
+impl<S: fmt::Debug, V> fmt::Debug for SsoFlowBuilder<S, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SsoFlowBuilder")
+            .field("cache_dir", &self.cache_dir)
+            .field("config_source", &self.config_source)
+            .field(
+                "verification_prompt",
+                if self.verification_prompt.is_some() {
+                    &"Some(_)"
+                } else {
+                    &"None"
+                },
+            )
+            .finish()
     }
 }
 
@@ -174,7 +191,7 @@ pub trait SsoConfigSource {
 }
 
 /// AWS SSO configuration.
-#[derive(Hash)]
+#[derive(Clone, Debug, Hash)]
 pub struct SsoConfig {
     /// The AWS region in which SSO was setup.
     ///

@@ -1,5 +1,6 @@
 use std::{convert::Infallible, fmt, path::PathBuf};
 
+use aws_config::SdkConfig;
 use url::Url;
 
 use crate::{
@@ -80,14 +81,12 @@ where
         config: SsoConfig,
         verification_prompt: V,
     ) -> Self {
-        let client = std::sync::Arc::new(
-            rusoto_core::HttpClient::new().expect("HttpClient::new never panics"),
-        );
+        let sdk_config = SdkConfig::builder().region(config.region.0.clone()).build();
 
         Self {
             cache: Cache::new(cache_dir, &config),
-            sso_oidc_client: sso_oidc::Client::new(client.clone(), config.region.clone()),
-            sso_client: sso::Client::new(client, config.region.clone()),
+            sso_oidc_client: sso_oidc::Client::new(&sdk_config),
+            sso_client: sso::Client::new(&sdk_config),
             config,
             verification_prompt,
         }

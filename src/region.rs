@@ -1,11 +1,28 @@
-//! A wrapper around [`rusoto_core::Region`], to avoid exposing it in the API.
+// A wrapper around `aws_types::Region` to avoid exposing it in the API.
 
-use std::fmt;
+use std::{borrow::Cow, fmt};
+
+// Use `Region` from `aws_sdk_sso` to avoid depending directly on `aws_types`. It's hoped this will
+// make it possible to integrate with other versions of aws-sdk than the one used to implement this
+// crate, since the `aws-types` dependency can be more flexible.
+use aws_sdk_sso::Region as SdkRegion;
 
 /// An AWS region.
-#[derive(Clone, Default, Eq, Hash, PartialEq, serde::Deserialize, serde::Serialize)]
-#[serde(transparent)]
-pub struct Region(pub(crate) rusoto_core::Region);
+#[derive(Clone, Eq, Hash, PartialEq)]
+pub struct Region(pub(crate) SdkRegion);
+
+impl Region {
+    /// Construct a new `Region` for the given string.
+    pub fn new(region: impl Into<Cow<'static, str>>) -> Self {
+        Self(SdkRegion::new(region))
+    }
+}
+
+impl AsRef<str> for Region {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
+    }
+}
 
 impl fmt::Debug for Region {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -15,36 +32,6 @@ impl fmt::Debug for Region {
 
 impl fmt::Display for Region {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0.name())
-    }
-}
-
-impl std::str::FromStr for Region {
-    type Err = ParseRegionError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.parse().map(Region).map_err(ParseRegionError)
-    }
-}
-
-/// The error returned when trying to parse a [`Region`] from an invalid `&str`.
-#[derive(PartialEq)]
-pub struct ParseRegionError(rusoto_core::region::ParseRegionError);
-
-impl fmt::Debug for ParseRegionError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
-    }
-}
-
-impl fmt::Display for ParseRegionError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl std::error::Error for ParseRegionError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        self.0.source()
     }
 }

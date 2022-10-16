@@ -28,7 +28,7 @@ use crate::{SessionCredentials, SsoConfigSource, SsoFlow, SsoFlowBuilder, Verifi
 ///
 /// use aws_config::meta::credentials::CredentialsProviderChain;
 /// use aws_types::credentials::ProvideCredentials;
-/// use aws_sso_flow::{SsoConfig, SsoFlow};
+/// use aws_sso_flow::{Region, SsoConfig, SsoFlow};
 ///
 /// // Configure an SSO flow that loads SSO from shared config and prints the verification URL
 /// let flow = SsoFlow::builder().verification_prompt(|url| async move {
@@ -48,7 +48,7 @@ use crate::{SessionCredentials, SsoConfigSource, SsoFlow, SsoFlowBuilder, Verifi
 /// // Configure an SSO flow that uses static configuration
 /// let flow = SsoFlow::builder()
 ///     .config(SsoConfig {
-///         region: "eu-west-1".parse().unwrap(),
+///         region: Region::new("eu-west-1"),
 ///         start_url: "myorg.signin.amazonaws.com/start".to_string(),
 ///         account_id: "012345678910".to_string(),
 ///         role_name: "developer".to_string(),

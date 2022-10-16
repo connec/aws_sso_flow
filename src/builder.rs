@@ -12,14 +12,14 @@ use crate::{ProfileSource, Region, SsoFlow, VerificationPrompt, CLIENT_NAME};
 /// # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// use std::{convert::Infallible, fmt};
 ///
-/// use aws_sso_flow::{SsoConfig, SsoFlowBuilder};
+/// use aws_sso_flow::{Region, SsoConfig, SsoFlowBuilder};
 ///
 /// let flow = SsoFlowBuilder::new()
 ///     // change the cache directory to "$PWD/.cache" instead of OS cache dir
 ///     .cache_dir(".cache")
 ///     // use hard-coded SSO configuration instead of loading from profile
 ///     .config(SsoConfig {
-///         region: "eu-west-1".parse().unwrap(),
+///         region: Region::new("eu-west-1"),
 ///         start_url: "myorg.awsapps.com/start".to_string(),
 ///         account_id: "012345678910".to_string(),
 ///         role_name: "PowerUser".to_string(),

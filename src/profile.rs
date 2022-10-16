@@ -205,22 +205,12 @@ async fn parse_profile(path: &Path, profile: &str) -> Result<SsoConfig, SsoProfi
     }
 
     match (region, start_url, account_id, role_name) {
-        (Some(region), Some(start_url), Some(account_id), Some(role_name)) => {
-            let region = region.parse().map_err(|error| {
-                SsoProfileError::new(format!(
-                    "error in profile {} in config file {}: {}",
-                    profile,
-                    path.display(),
-                    error
-                ))
-            })?;
-            Ok(SsoConfig {
-                region,
-                start_url,
-                account_id,
-                role_name,
-            })
-        }
+        (Some(region), Some(start_url), Some(account_id), Some(role_name)) => Ok(SsoConfig {
+            region: crate::Region::new(region),
+            start_url,
+            account_id,
+            role_name,
+        }),
         (region, start_url, account_id, role_name) => {
             let missing: Vec<_> = region
                 .map_or_else(|| Some("sso_region"), |_| None)

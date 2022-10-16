@@ -2,24 +2,19 @@
 
 use std::fmt;
 
+use aws_config::SdkConfig;
 use chrono::{DateTime, TimeZone, Utc};
-use rusoto_core::{credential::StaticProvider, DispatchSignedRequest};
-use rusoto_sso::{Sso, SsoClient};
 
-use crate::{cache::Expiry, Region};
+use crate::cache::Expiry;
 
 pub(crate) struct Client {
-    inner: SsoClient,
+    inner: aws_sdk_sso::Client,
 }
 
 impl Client {
-    pub(crate) fn new<D>(request_dispatcher: D, region: Region) -> Self
-    where
-        D: DispatchSignedRequest + Send + Sync + 'static,
-    {
-        let anonymous = StaticProvider::new_minimal("".to_string(), "".to_string());
+    pub(crate) fn new(config: &SdkConfig) -> Self {
         Self {
-            inner: SsoClient::new_with(request_dispatcher, anonymous, region.0),
+            inner: aws_sdk_sso::Client::new(config),
         }
     }
 
@@ -28,7 +23,11 @@ impl Client {
         request: GetRoleCredentialsRequest,
     ) -> Result<GetRoleCredentialsResponse, String> {
         self.inner
-            .get_role_credentials(request.into())
+            .get_role_credentials()
+            .access_token(request.access_token)
+            .account_id(request.account_id)
+            .role_name(request.role_name)
+            .send()
             .await
             .map_err(|error| error.to_string())
             .and_then(TryInto::try_into)
@@ -48,16 +47,6 @@ pub(crate) struct GetRoleCredentialsRequest {
     pub(crate) role_name: String,
 }
 
-impl From<GetRoleCredentialsRequest> for rusoto_sso::GetRoleCredentialsRequest {
-    fn from(req: GetRoleCredentialsRequest) -> Self {
-        Self {
-            access_token: req.access_token,
-            account_id: req.account_id,
-            role_name: req.role_name,
-        }
-    }
-}
-
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub(crate) struct GetRoleCredentialsResponse {
     pub(crate) access_key_id: String,
@@ -72,10 +61,10 @@ impl Expiry for GetRoleCredentialsResponse {
     }
 }
 
-impl TryFrom<rusoto_sso::GetRoleCredentialsResponse> for GetRoleCredentialsResponse {
+impl TryFrom<aws_sdk_sso::output::GetRoleCredentialsOutput> for GetRoleCredentialsResponse {
     type Error = String;
 
-    fn try_from(res: rusoto_sso::GetRoleCredentialsResponse) -> Result<Self, Self::Error> {
+    fn try_from(res: aws_sdk_sso::output::GetRoleCredentialsOutput) -> Result<Self, Self::Error> {
         macro_rules! invalid_res {
             ($msg:literal) => {
                 concat!("invalid GetRoleCredentials response: ", $msg)
@@ -95,10 +84,7 @@ impl TryFrom<rusoto_sso::GetRoleCredentialsResponse> for GetRoleCredentialsRespo
             session_token: credentials
                 .session_token
                 .ok_or(invalid_res!("missing session_token"))?,
-            expires_at: credentials
-                .expiration
-                .map(|millis| Utc.timestamp_millis(millis))
-                .ok_or(invalid_res!("missing expires_at"))?,
+            expires_at: Utc.timestamp_millis(credentials.expiration),
         })
     }
 }

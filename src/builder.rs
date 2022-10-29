@@ -211,11 +211,11 @@ pub struct SsoConfig {
 }
 
 impl SsoConfigSource for SsoConfig {
-    type Future = futures::future::Ready<Result<Self, Self::Error>>;
+    type Future = std::future::Ready<Result<Self, Self::Error>>;
 
     type Error = Infallible;
 
     fn load(self) -> Self::Future {
-        futures::future::ready(Ok(self))
+        std::future::ready(Ok(self))
     }
 }

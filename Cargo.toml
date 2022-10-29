@@ -22,6 +22,10 @@ aws-sdk = ["dep:aws-types-integration"]
 # Include integration with rusoto_credential
 rusoto = ["async-trait", "rusoto_credential"]
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [dependencies]
 aws-config = { version = "0.49.0", default-features = false, features = ["client-hyper", "rt-tokio"] }
 aws-sdk-sso = { version = "0.19.0", default-features = false, features = ["rt-tokio"] }

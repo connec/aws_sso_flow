@@ -1,3 +1,4 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs, clippy::pedantic)]
 
 //! AWS SSO authentication flow.
@@ -15,6 +16,7 @@
 //! # Ok(()) }
 //! ```
 
+#[cfg_attr(docsrs, doc(cfg(feature = "aws-sdk")))]
 #[cfg(feature = "aws-sdk")]
 mod aws_sdk;
 mod builder;
@@ -23,6 +25,7 @@ mod credentials;
 mod flow;
 mod profile;
 mod region;
+#[cfg_attr(docsrs, doc(cfg(feature = "rusoto")))]
 #[cfg(feature = "rusoto")]
 mod rusoto;
 mod sso;

@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use rusoto_credential::{AwsCredentials, CredentialsError, ProvideAwsCredentials};
 
 use crate::{
-    SessionCredentials, SsoConfigSource, SsoFlow, SsoFlowBuilder, SsoProfileError,
+    SessionCredentials, SsoConfigSource, SsoFlow, SsoFlowBuilder,
     VerificationPrompt,
 };
 
@@ -13,7 +13,6 @@ impl<S, V> ProvideAwsCredentials for SsoFlowBuilder<S, V>
 where
     S: SsoConfigSource + Clone + Send + Sync,
     S::Future: Send,
-    S::Error: Into<SsoProfileError>,
     V: VerificationPrompt + Clone + Send + Sync,
 {
     async fn credentials(&self) -> Result<AwsCredentials, CredentialsError> {

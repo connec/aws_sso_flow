@@ -1,4 +1,4 @@
-use std::{convert::Infallible, path::PathBuf};
+use std::{convert::Infallible, fmt, path::PathBuf};
 
 use crate::{ProfileSource, Region, SsoFlow, VerificationPrompt, CLIENT_NAME};
 
@@ -12,14 +12,14 @@ use crate::{ProfileSource, Region, SsoFlow, VerificationPrompt, CLIENT_NAME};
 /// # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// use std::{convert::Infallible, fmt};
 ///
-/// use aws_sso_flow::{SsoConfig, SsoFlowBuilder};
+/// use aws_sso_flow::{Region, SsoConfig, SsoFlowBuilder};
 ///
 /// let flow = SsoFlowBuilder::new()
 ///     // change the cache directory to "$PWD/.cache" instead of OS cache dir
 ///     .cache_dir(".cache")
 ///     // use hard-coded SSO configuration instead of loading from profile
 ///     .config(SsoConfig {
-///         region: "eu-west-1".parse().unwrap(),
+///         region: Region::new("eu-west-1"),
 ///         start_url: "myorg.awsapps.com/start".to_string(),
 ///         account_id: "012345678910".to_string(),
 ///         role_name: "PowerUser".to_string(),
@@ -68,6 +68,23 @@ impl Default for SsoFlowBuilder<ProfileSource, Infallible> {
             config_source: ProfileSource::default(),
             verification_prompt: None,
         }
+    }
+}
+
+impl<S: fmt::Debug, V> fmt::Debug for SsoFlowBuilder<S, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SsoFlowBuilder")
+            .field("cache_dir", &self.cache_dir)
+            .field("config_source", &self.config_source)
+            .field(
+                "verification_prompt",
+                if self.verification_prompt.is_some() {
+                    &"Some(_)"
+                } else {
+                    &"None"
+                },
+            )
+            .finish()
     }
 }
 
@@ -174,7 +191,7 @@ pub trait SsoConfigSource {
 }
 
 /// AWS SSO configuration.
-#[derive(Hash)]
+#[derive(Clone, Debug, Hash)]
 pub struct SsoConfig {
     /// The AWS region in which SSO was setup.
     ///
@@ -194,11 +211,11 @@ pub struct SsoConfig {
 }
 
 impl SsoConfigSource for SsoConfig {
-    type Future = futures::future::Ready<Result<Self, Self::Error>>;
+    type Future = std::future::Ready<Result<Self, Self::Error>>;
 
     type Error = Infallible;
 
     fn load(self) -> Self::Future {
-        futures::future::ready(Ok(self))
+        std::future::ready(Ok(self))
     }
 }

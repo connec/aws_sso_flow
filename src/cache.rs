@@ -12,6 +12,7 @@ use tokio::fs;
 
 const CACHE_BUFFER: std::time::Duration = std::time::Duration::from_secs(60);
 
+#[derive(Debug)]
 pub(crate) struct Cache {
     dir: Option<PathBuf>,
     suffix: String,

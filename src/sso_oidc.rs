@@ -1,24 +1,21 @@
 //! Cleaned up AWS SSO OIDC API.
 
+use std::fmt;
+
+use aws_config::SdkConfig;
 use chrono::{DateTime, TimeZone, Utc};
-use rusoto_core::{credential::StaticProvider, DispatchSignedRequest, RusotoError};
-use rusoto_sso_oidc::{SsoOidc, SsoOidcClient};
 use url::Url;
 
-use crate::{cache, Region, VerificationPrompt};
+use crate::{cache, VerificationPrompt};
 
 pub(crate) struct Client {
-    inner: SsoOidcClient,
+    inner: aws_sdk_ssooidc::Client,
 }
 
 impl Client {
-    pub(crate) fn new<D>(request_dispatcher: D, region: Region) -> Self
-    where
-        D: DispatchSignedRequest + Send + Sync + 'static,
-    {
-        let anonymous = StaticProvider::new_minimal("".to_string(), "".to_string());
+    pub(crate) fn new(config: &SdkConfig) -> Self {
         Self {
-            inner: SsoOidcClient::new_with(request_dispatcher, anonymous, region.0),
+            inner: aws_sdk_ssooidc::Client::new(config),
         }
     }
 
@@ -27,7 +24,10 @@ impl Client {
         request: RegisterClientRequest,
     ) -> Result<RegisterClientResponse, String> {
         self.inner
-            .register_client(request.into())
+            .register_client()
+            .client_name(request.client_name)
+            .client_type("public")
+            .send()
             .await
             .map_err(|error| error.to_string())
             .and_then(TryInto::try_into)
@@ -43,7 +43,11 @@ impl Client {
 
         let start_device_authorization_response: StartDeviceAuthorizationResponse = self
             .inner
-            .start_device_authorization(request.into())
+            .start_device_authorization()
+            .client_id(request.client_id)
+            .client_secret(request.client_secret)
+            .start_url(request.start_url)
+            .send()
             .await
             .map_err(|error| error.to_string())
             .and_then(TryInto::try_into)
@@ -54,25 +58,25 @@ impl Client {
             .await
             .map_err(CreateTokenError::VerificationPrompt)?;
 
-        let create_token_request = rusoto_sso_oidc::CreateTokenRequest {
-            client_id,
-            client_secret,
-            code: Some(start_device_authorization_response.user_code),
-            device_code: start_device_authorization_response.device_code,
-            grant_type: "urn:ietf:params:oauth:grant-type:device_code".to_string(),
-            redirect_uri: None,
-            refresh_token: None,
-            scope: None,
-        };
+        let create_token_request = self
+            .inner
+            .create_token()
+            .client_id(client_id)
+            .client_secret(client_secret)
+            .code(start_device_authorization_response.user_code)
+            .device_code(start_device_authorization_response.device_code)
+            .grant_type("urn:ietf:params:oauth:grant-type:device_code".to_string());
         loop {
-            match self.inner.create_token(create_token_request.clone()).await {
+            match create_token_request.clone().send().await {
                 Ok(res) => break res.try_into().map_err(CreateTokenError::Api),
-                Err(RusotoError::Service(
-                    rusoto_sso_oidc::CreateTokenError::AuthorizationPending(_),
-                )) => {
+                Err(aws_sdk_ssooidc::types::SdkError::ServiceError { err, .. })
+                    if err.is_authorization_pending_exception() =>
+                {
                     tokio::time::sleep(start_device_authorization_response.interval).await;
                 }
-                Err(RusotoError::Service(rusoto_sso_oidc::CreateTokenError::ExpiredToken(_))) => {
+                Err(aws_sdk_ssooidc::types::SdkError::ServiceError { err, .. })
+                    if err.is_expired_token_exception() =>
+                {
                     return Err(CreateTokenError::VerificationPromptTimeout);
                 }
                 Err(error) => return Err(CreateTokenError::Api(error.to_string())),
@@ -81,19 +85,15 @@ impl Client {
     }
 }
 
+impl fmt::Debug for Client {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Client").finish_non_exhaustive()
+    }
+}
+
 #[derive(Debug, Hash)]
 pub(crate) struct RegisterClientRequest {
     pub(crate) client_name: String,
-}
-
-impl From<RegisterClientRequest> for rusoto_sso_oidc::RegisterClientRequest {
-    fn from(req: RegisterClientRequest) -> Self {
-        Self {
-            client_name: req.client_name,
-            client_type: "public".to_string(),
-            scopes: None,
-        }
-    }
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -109,10 +109,10 @@ impl cache::Expiry for RegisterClientResponse {
     }
 }
 
-impl TryFrom<rusoto_sso_oidc::RegisterClientResponse> for RegisterClientResponse {
+impl TryFrom<aws_sdk_ssooidc::output::RegisterClientOutput> for RegisterClientResponse {
     type Error = String;
 
-    fn try_from(res: rusoto_sso_oidc::RegisterClientResponse) -> Result<Self, Self::Error> {
+    fn try_from(res: aws_sdk_ssooidc::output::RegisterClientOutput) -> Result<Self, Self::Error> {
         macro_rules! invalid_res {
             ($msg:literal) => {
                 concat!("invalid RegisterClient response: ", $msg)
@@ -124,10 +124,7 @@ impl TryFrom<rusoto_sso_oidc::RegisterClientResponse> for RegisterClientResponse
             client_secret: res
                 .client_secret
                 .ok_or(invalid_res!("missing client_secret"))?,
-            client_secret_expires_at: res
-                .client_secret_expires_at
-                .map(|secs| Utc.timestamp(secs, 0))
-                .ok_or(invalid_res!("missing client_secret_expires_at"))?,
+            client_secret_expires_at: Utc.timestamp(res.client_secret_expires_at, 0),
         })
     }
 }
@@ -137,16 +134,6 @@ pub(crate) struct CreateTokenRequest {
     pub(crate) client_id: String,
     pub(crate) client_secret: String,
     pub(crate) start_url: String,
-}
-
-impl From<CreateTokenRequest> for rusoto_sso_oidc::StartDeviceAuthorizationRequest {
-    fn from(req: CreateTokenRequest) -> Self {
-        Self {
-            client_id: req.client_id,
-            client_secret: req.client_secret,
-            start_url: req.start_url,
-        }
-    }
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -161,10 +148,10 @@ impl cache::Expiry for CreateTokenResponse {
     }
 }
 
-impl TryFrom<rusoto_sso_oidc::CreateTokenResponse> for CreateTokenResponse {
+impl TryFrom<aws_sdk_ssooidc::output::CreateTokenOutput> for CreateTokenResponse {
     type Error = String;
 
-    fn try_from(res: rusoto_sso_oidc::CreateTokenResponse) -> Result<Self, Self::Error> {
+    fn try_from(res: aws_sdk_ssooidc::output::CreateTokenOutput) -> Result<Self, Self::Error> {
         macro_rules! invalid_res {
             ($msg:literal) => {
                 concat!("invalid CreateToken response: ", $msg)
@@ -175,10 +162,7 @@ impl TryFrom<rusoto_sso_oidc::CreateTokenResponse> for CreateTokenResponse {
             access_token: res
                 .access_token
                 .ok_or(invalid_res!("missing access_token"))?,
-            expires_at: Utc::now()
-                + chrono::Duration::seconds(
-                    res.expires_in.ok_or(invalid_res!("missing expires_in"))?,
-                ),
+            expires_at: Utc::now() + chrono::Duration::seconds(res.expires_in.into()),
         })
     }
 }
@@ -198,13 +182,13 @@ struct StartDeviceAuthorizationResponse {
     verification_uri_complete: Url,
 }
 
-impl TryFrom<rusoto_sso_oidc::StartDeviceAuthorizationResponse>
+impl TryFrom<aws_sdk_ssooidc::output::StartDeviceAuthorizationOutput>
     for StartDeviceAuthorizationResponse
 {
     type Error = String;
 
     fn try_from(
-        res: rusoto_sso_oidc::StartDeviceAuthorizationResponse,
+        res: aws_sdk_ssooidc::output::StartDeviceAuthorizationOutput,
     ) -> Result<Self, Self::Error> {
         macro_rules! invalid_res {
             ($msg:literal) => {
@@ -215,10 +199,7 @@ impl TryFrom<rusoto_sso_oidc::StartDeviceAuthorizationResponse>
         Ok(Self {
             device_code: res.device_code.ok_or(invalid_res!("missing device_code"))?,
             interval: std::time::Duration::from_secs(
-                res.interval
-                    .ok_or(invalid_res!("missing interval"))?
-                    .try_into()
-                    .expect("interval should fit u64"),
+                res.interval.try_into().expect("interval should fit u64"),
             ),
             user_code: res.user_code.ok_or(invalid_res!("missing user_code"))?,
             verification_uri_complete: res

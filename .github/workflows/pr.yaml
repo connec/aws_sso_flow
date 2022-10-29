@@ -34,6 +34,7 @@ jobs:
       matrix:
         tls: [rustls, native]
         rusoto: [true, false]
+        aws-sdk: [true, false]
     steps:
       - uses: actions/checkout@v2
       - name: Cargo cache
@@ -49,12 +50,13 @@ jobs:
       - name: Check cache
         uses: actions/cache@v2
         with:
-          key: check-${{ matrix.tls }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
+          key: check-${{ matrix.tls }}-${{ matrix.aws-sdk }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Check
         run: |
           cargo check --all-targets --no-default-features \
             --features ${{ matrix.tls == 'rustls' && 'rustls' || 'native-tls' }} \
+            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }} \
             ${{ matrix.rusoto && '--features rusoto' || '' }}
 
   clippy:
@@ -79,12 +81,13 @@ jobs:
       - name: Check cache
         uses: actions/cache@v2
         with:
-          key: check-${{ matrix.tls }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
+          key: check-${{ matrix.tls }}-${{ matrix.aws-sdk }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Clippy
         run: |
           cargo clippy --all-targets --no-default-features \
             --features ${{ matrix.tls == 'rustls' && 'rustls' || 'native-tls' }} \
+            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }} \
             ${{ matrix.rusoto && '--features rusoto' || '' }}
 
   doc-check:
@@ -109,12 +112,13 @@ jobs:
       - name: Check cache
         uses: actions/cache@v2
         with:
-          key: check-${{ matrix.tls }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
+          key: check-${{ matrix.tls }}-${{ matrix.aws-sdk }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Doc check
         run: |
           cargo doc --no-deps --no-default-features \
             --features ${{ matrix.tls == 'rustls' && 'rustls' || 'native-tls' }} \
+            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }} \
             ${{ matrix.rusoto && '--features rusoto' || '' }}
 
   test:
@@ -139,12 +143,13 @@ jobs:
       - name: Test cache
         uses: actions/cache@v2
         with:
-          key: test-${{ matrix.tls }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
+          key: test-${{ matrix.tls }}-${{ matrix.aws-sdk }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Test
         run: |
           cargo test --no-default-features \
             --features ${{ matrix.tls == 'rustls' && 'rustls' || 'native-tls' }} \
+            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }} \
             ${{ matrix.rusoto && '--features rusoto' || '' }}
 
   status:

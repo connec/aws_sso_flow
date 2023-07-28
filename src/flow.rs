@@ -249,13 +249,11 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Api(error) => write!(f, "SSO authentication failed due to: {}", error),
-            Self::Cache(error) => write!(f, "SSO authentication failed due to: {}", error),
-            Self::VerificationPrompt(error) => write!(
-                f,
-                "SSO authentication failed during verification: {}",
-                error
-            ),
+            Self::Api(error) => write!(f, "SSO authentication failed due to: {error}"),
+            Self::Cache(error) => write!(f, "SSO authentication failed due to: {error}"),
+            Self::VerificationPrompt(error) => {
+                write!(f, "SSO authentication failed during verification: {error}",)
+            }
             Self::VerificationPromptTimeout => write!(
                 f,
                 "SSO authentication failed: timed out waiting for verification"

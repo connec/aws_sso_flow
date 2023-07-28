@@ -1,7 +1,7 @@
 use std::convert::Infallible;
 
 use aws_config::meta::credentials::CredentialsProviderChain;
-use aws_types_integration::credentials::ProvideCredentials;
+use aws_types_integration::provider::ProvideCredentials;
 
 use aws_sso_flow::SsoFlow;
 

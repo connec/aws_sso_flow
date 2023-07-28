@@ -1,8 +1,9 @@
 use std::fmt;
 
 use aws_types_integration::{
-    credentials::{
-        future::ProvideCredentials as ProvideCredentialsFut, CredentialsError, ProvideCredentials,
+    provider::{
+        error::CredentialsError, future::ProvideCredentials as ProvideCredentialsFut,
+        ProvideCredentials,
     },
     Credentials,
 };
@@ -102,7 +103,7 @@ where
 {
     fn provide_credentials<'a>(
         &'a self,
-    ) -> aws_types_integration::credentials::future::ProvideCredentials<'a>
+    ) -> aws_types_integration::provider::future::ProvideCredentials<'a>
     where
         Self: 'a,
     {

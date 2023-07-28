@@ -69,13 +69,13 @@ impl Client {
         loop {
             match create_token_request.clone().send().await {
                 Ok(res) => break res.try_into().map_err(CreateTokenError::Api),
-                Err(aws_sdk_ssooidc::types::SdkError::ServiceError { err, .. })
-                    if err.is_authorization_pending_exception() =>
+                Err(aws_sdk_ssooidc::error::SdkError::ServiceError(err))
+                    if err.err().is_authorization_pending_exception() =>
                 {
                     tokio::time::sleep(start_device_authorization_response.interval).await;
                 }
-                Err(aws_sdk_ssooidc::types::SdkError::ServiceError { err, .. })
-                    if err.is_expired_token_exception() =>
+                Err(aws_sdk_ssooidc::error::SdkError::ServiceError(err))
+                    if err.err().is_expired_token_exception() =>
                 {
                     return Err(CreateTokenError::VerificationPromptTimeout);
                 }
@@ -109,22 +109,29 @@ impl cache::Expiry for RegisterClientResponse {
     }
 }
 
-impl TryFrom<aws_sdk_ssooidc::output::RegisterClientOutput> for RegisterClientResponse {
+impl TryFrom<aws_sdk_ssooidc::operation::register_client::RegisterClientOutput>
+    for RegisterClientResponse
+{
     type Error = String;
 
-    fn try_from(res: aws_sdk_ssooidc::output::RegisterClientOutput) -> Result<Self, Self::Error> {
+    fn try_from(
+        res: aws_sdk_ssooidc::operation::register_client::RegisterClientOutput,
+    ) -> Result<Self, Self::Error> {
         macro_rules! invalid_res {
             ($msg:literal) => {
                 concat!("invalid RegisterClient response: ", $msg)
             };
         }
 
+        let chrono::LocalResult::Single(client_secret_expires_at) = Utc.timestamp_opt(res.client_secret_expires_at, 0) else {
+            panic!("invalid client_secret_expires_at");
+        };
         Ok(Self {
             client_id: res.client_id.ok_or(invalid_res!("missing client_id"))?,
             client_secret: res
                 .client_secret
                 .ok_or(invalid_res!("missing client_secret"))?,
-            client_secret_expires_at: Utc.timestamp(res.client_secret_expires_at, 0),
+            client_secret_expires_at,
         })
     }
 }
@@ -148,10 +155,12 @@ impl cache::Expiry for CreateTokenResponse {
     }
 }
 
-impl TryFrom<aws_sdk_ssooidc::output::CreateTokenOutput> for CreateTokenResponse {
+impl TryFrom<aws_sdk_ssooidc::operation::create_token::CreateTokenOutput> for CreateTokenResponse {
     type Error = String;
 
-    fn try_from(res: aws_sdk_ssooidc::output::CreateTokenOutput) -> Result<Self, Self::Error> {
+    fn try_from(
+        res: aws_sdk_ssooidc::operation::create_token::CreateTokenOutput,
+    ) -> Result<Self, Self::Error> {
         macro_rules! invalid_res {
             ($msg:literal) => {
                 concat!("invalid CreateToken response: ", $msg)
@@ -182,13 +191,13 @@ struct StartDeviceAuthorizationResponse {
     verification_uri_complete: Url,
 }
 
-impl TryFrom<aws_sdk_ssooidc::output::StartDeviceAuthorizationOutput>
+impl TryFrom<aws_sdk_ssooidc::operation::start_device_authorization::StartDeviceAuthorizationOutput>
     for StartDeviceAuthorizationResponse
 {
     type Error = String;
 
     fn try_from(
-        res: aws_sdk_ssooidc::output::StartDeviceAuthorizationOutput,
+        res: aws_sdk_ssooidc::operation::start_device_authorization::StartDeviceAuthorizationOutput,
     ) -> Result<Self, Self::Error> {
         macro_rules! invalid_res {
             ($msg:literal) => {

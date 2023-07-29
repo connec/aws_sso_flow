@@ -5,7 +5,7 @@ use std::{borrow::Cow, fmt};
 // Use `Region` from `aws_sdk_sso` to avoid depending directly on `aws_types`. It's hoped this will
 // make it possible to integrate with other versions of aws-sdk than the one used to implement this
 // crate, since the `aws-types` dependency can be more flexible.
-use aws_sdk_sso::Region as SdkRegion;
+use aws_sdk_sso::config::Region as SdkRegion;
 
 /// An AWS region.
 #[derive(Clone, Eq, Hash, PartialEq)]

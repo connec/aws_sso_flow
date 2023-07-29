@@ -3,10 +3,7 @@ use std::fmt;
 use async_trait::async_trait;
 use rusoto_credential::{AwsCredentials, CredentialsError, ProvideAwsCredentials};
 
-use crate::{
-    SessionCredentials, SsoConfigSource, SsoFlow, SsoFlowBuilder,
-    VerificationPrompt,
-};
+use crate::{SessionCredentials, SsoConfigSource, SsoFlow, SsoFlowBuilder, VerificationPrompt};
 
 #[async_trait]
 impl<S, V> ProvideAwsCredentials for SsoFlowBuilder<S, V>
@@ -123,7 +120,7 @@ impl ProvideAwsCredentials for ChainProvider {
             }
         }
 
-        let error_messages: Vec<_> = errors.iter().map(|error| format!("- {}", error)).collect();
+        let error_messages: Vec<_> = errors.iter().map(|error| format!("- {error}")).collect();
         Err(CredentialsError::new(format!(
             "Couldn't find AWS credentials through any configured provider; all errors:\n\n{}",
             error_messages.join("\n")

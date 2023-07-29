@@ -61,10 +61,14 @@ impl Expiry for GetRoleCredentialsResponse {
     }
 }
 
-impl TryFrom<aws_sdk_sso::output::GetRoleCredentialsOutput> for GetRoleCredentialsResponse {
+impl TryFrom<aws_sdk_sso::operation::get_role_credentials::GetRoleCredentialsOutput>
+    for GetRoleCredentialsResponse
+{
     type Error = String;
 
-    fn try_from(res: aws_sdk_sso::output::GetRoleCredentialsOutput) -> Result<Self, Self::Error> {
+    fn try_from(
+        res: aws_sdk_sso::operation::get_role_credentials::GetRoleCredentialsOutput,
+    ) -> Result<Self, Self::Error> {
         macro_rules! invalid_res {
             ($msg:literal) => {
                 concat!("invalid GetRoleCredentials response: ", $msg)
@@ -74,6 +78,9 @@ impl TryFrom<aws_sdk_sso::output::GetRoleCredentialsOutput> for GetRoleCredentia
         let credentials = res
             .role_credentials
             .ok_or(invalid_res!("missing role_credentials"))?;
+        let chrono::LocalResult::Single(expires_at) = Utc.timestamp_millis_opt(credentials.expiration) else {
+            panic!("invalid expires_at");
+        };
         Ok(Self {
             access_key_id: credentials
                 .access_key_id
@@ -84,7 +91,7 @@ impl TryFrom<aws_sdk_sso::output::GetRoleCredentialsOutput> for GetRoleCredentia
             session_token: credentials
                 .session_token
                 .ok_or(invalid_res!("missing session_token"))?,
-            expires_at: Utc.timestamp_millis(credentials.expiration),
+            expires_at,
         })
     }
 }

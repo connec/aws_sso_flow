@@ -13,9 +13,9 @@ jobs:
   update:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cargo cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: ${{ github.sha }}
           path: |
@@ -34,9 +34,9 @@ jobs:
       matrix:
         aws-sdk: [true, false]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cargo cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: ${{ github.sha }}
           path: |
@@ -46,7 +46,7 @@ jobs:
             ~/.cargo/registry/index
             Cargo.lock
       - name: Check cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: check-${{ matrix.aws-sdk }}-${{ hashFiles('Cargo.lock') }}
           path: target
@@ -63,9 +63,9 @@ jobs:
       matrix:
         aws-sdk: [true, false]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cargo cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: ${{ github.sha }}
           path: |
@@ -75,7 +75,7 @@ jobs:
             ~/.cargo/registry/index
             Cargo.lock
       - name: Check cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: check-${{ matrix.aws-sdk }}-${{ hashFiles('Cargo.lock') }}
           path: target
@@ -92,9 +92,9 @@ jobs:
       matrix:
         aws-sdk: [true, false]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cargo cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: ${{ github.sha }}
           path: |
@@ -104,7 +104,7 @@ jobs:
             ~/.cargo/registry/index
             Cargo.lock
       - name: Check cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: check-${{ matrix.aws-sdk }}-${{ hashFiles('Cargo.lock') }}
           path: target
@@ -121,9 +121,9 @@ jobs:
       matrix:
         aws-sdk: [true, false]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cargo cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: ${{ github.sha }}
           path: |
@@ -133,7 +133,7 @@ jobs:
             ~/.cargo/registry/index
             Cargo.lock
       - name: Test cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           key: test-${{ matrix.aws-sdk }}-${{ hashFiles('Cargo.lock') }}
           path: target

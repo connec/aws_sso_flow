@@ -32,7 +32,6 @@ jobs:
     needs: [update]
     strategy:
       matrix:
-        rusoto: [true, false]
         aws-sdk: [true, false]
     steps:
       - uses: actions/checkout@v2
@@ -49,21 +48,20 @@ jobs:
       - name: Check cache
         uses: actions/cache@v2
         with:
-          key: check-${{ matrix.aws-sdk }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
+          key: check-${{ matrix.aws-sdk }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Check
         run: |
           cargo check --all-targets --no-default-features \
             --features rustls \
-            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }} \
-            ${{ matrix.rusoto && '--features rusoto' || '' }}
+            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }}
 
   clippy:
     runs-on: ubuntu-20.04
     needs: [check]
     strategy:
       matrix:
-        rusoto: [true, false]
+        aws-sdk: [true, false]
     steps:
       - uses: actions/checkout@v2
       - name: Cargo cache
@@ -79,21 +77,20 @@ jobs:
       - name: Check cache
         uses: actions/cache@v2
         with:
-          key: check-${{ matrix.aws-sdk }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
+          key: check-${{ matrix.aws-sdk }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Clippy
         run: |
           cargo clippy --all-targets --no-default-features \
             --features rustls \
-            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }} \
-            ${{ matrix.rusoto && '--features rusoto' || '' }}
+            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }}
 
   doc-check:
     runs-on: ubuntu-20.04
     needs: [check]
     strategy:
       matrix:
-        rusoto: [true, false]
+        aws-sdk: [true, false]
     steps:
       - uses: actions/checkout@v2
       - name: Cargo cache
@@ -109,21 +106,20 @@ jobs:
       - name: Check cache
         uses: actions/cache@v2
         with:
-          key: check-${{ matrix.aws-sdk }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
+          key: check-${{ matrix.aws-sdk }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Doc check
         run: |
           cargo doc --no-deps --no-default-features \
             --features rustls \
-            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }} \
-            ${{ matrix.rusoto && '--features rusoto' || '' }}
+            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }}
 
   test:
     runs-on: ubuntu-20.04
     needs: [update]
     strategy:
       matrix:
-        rusoto: [true, false]
+        aws-sdk: [true, false]
     steps:
       - uses: actions/checkout@v2
       - name: Cargo cache
@@ -139,14 +135,13 @@ jobs:
       - name: Test cache
         uses: actions/cache@v2
         with:
-          key: test-${{ matrix.aws-sdk }}-${{ matrix.rusoto }}-${{ hashFiles('Cargo.lock') }}
+          key: test-${{ matrix.aws-sdk }}-${{ hashFiles('Cargo.lock') }}
           path: target
       - name: Test
         run: |
           cargo test --no-default-features \
             --features rustls \
-            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }} \
-            ${{ matrix.rusoto && '--features rusoto' || '' }}
+            ${{ matrix.aws-sdk && '--features aws-sdk' || '' }}
 
   status:
     runs-on: ubuntu-20.04

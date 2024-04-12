@@ -97,6 +97,7 @@ pub(crate) struct RegisterClientRequest {
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[allow(clippy::struct_field_names)]
 pub(crate) struct RegisterClientResponse {
     pub(crate) client_id: String,
     pub(crate) client_secret: String,
@@ -123,7 +124,9 @@ impl TryFrom<aws_sdk_ssooidc::operation::register_client::RegisterClientOutput>
             };
         }
 
-        let chrono::LocalResult::Single(client_secret_expires_at) = Utc.timestamp_opt(res.client_secret_expires_at, 0) else {
+        let chrono::LocalResult::Single(client_secret_expires_at) =
+            Utc.timestamp_opt(res.client_secret_expires_at, 0)
+        else {
             panic!("invalid client_secret_expires_at");
         };
         Ok(Self {

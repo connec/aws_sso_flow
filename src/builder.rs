@@ -149,6 +149,7 @@ where
     /// # Errors
     ///
     /// Returns any errors encountered when loading the [`SsoConfigSource`].
+    #[allow(clippy::missing_panics_doc)]
     pub async fn build(self) -> Result<SsoFlow<V>, S::Error> {
         let config = self.config_source.load().await?;
 

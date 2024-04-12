@@ -28,7 +28,7 @@ impl fmt::Debug for SessionCredentials {
         f.debug_struct("SessionCredentials")
             .field("access_key_id", &self.access_key_id)
             .field("expires_at", &self.expires_at)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

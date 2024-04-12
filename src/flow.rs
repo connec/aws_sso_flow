@@ -1,6 +1,6 @@
 use std::{convert::Infallible, fmt, path::PathBuf};
 
-use aws_config::SdkConfig;
+use aws_config::{BehaviorVersion, SdkConfig};
 use url::Url;
 
 use crate::{
@@ -81,7 +81,10 @@ where
         config: SsoConfig,
         verification_prompt: V,
     ) -> Self {
-        let sdk_config = SdkConfig::builder().region(config.region.0.clone()).build();
+        let sdk_config = SdkConfig::builder()
+            .behavior_version(BehaviorVersion::latest())
+            .region(config.region.0.clone())
+            .build();
 
         Self {
             cache: Cache::new(cache_dir, &config),

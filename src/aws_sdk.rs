@@ -24,11 +24,11 @@ use crate::{SessionCredentials, SsoConfigSource, SsoFlow, SsoFlowBuilder, Verifi
 ///
 /// ```no_run
 /// # #[tokio::main] async fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// # use aws_types_integration as aws_types;
+/// # use aws_types_integration as aws_credential_types;
 /// use std::convert::Infallible;
 ///
 /// use aws_config::meta::credentials::CredentialsProviderChain;
-/// use aws_types::credentials::ProvideCredentials;
+/// use aws_credential_types::provider::ProvideCredentials;
 /// use aws_sso_flow::{Region, SsoConfig, SsoFlow};
 ///
 /// // Configure an SSO flow that loads SSO from shared config and prints the verification URL

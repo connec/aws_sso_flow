@@ -71,7 +71,7 @@ impl Cache {
             let content =
                 serde_json::to_string_pretty(&value).expect("tried to cache unserializable value");
             fs::create_dir_all(path.parent().expect("path in dir"))
-                .and_then(|_| fs::write(path, &content))
+                .and_then(|()| fs::write(path, &content))
                 .await
                 .map_err(|error| Error::cache("failed to write", path, error))?;
         }
